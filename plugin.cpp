@@ -5,9 +5,13 @@ void BuildMap() {
     for (auto* item : ingredients) {
         std::array<float, 4>& mags = effectsMap[item->GetFormID()];
         mags.fill(0.0f);
-        for (size_t i = 0; i < mags.size(); ++i) {
-            auto* effect = item->effects[i];
-            mags[i] = effect ? effect->GetMagnitude() : 0.0f;
+        for (size_t i = 0; i < item->effects.size(); ++i) {
+            if (auto* effect = item->effects[i]; effect) {
+                // if effect has no magnitude: send Duration instead (as negative just so we can identify it as such
+                mags[i] = effect->GetMagnitude()
+                              ? effect->GetMagnitude()
+                              : (effect->GetDuration() ? -static_cast<float>(effect->GetDuration()) : 0.0f);
+            }
         }
     }
 }
@@ -32,6 +36,7 @@ void Inject(BSFixedString menuName) {
 
     // we cache the ingredients and their effects
     if (effectsMap.empty()) BuildMap();
+    if (effectsMap.empty()) return; // precaution
 
     GFxValue _root;
     movie->GetVariable(&_root, "_root");
