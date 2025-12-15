@@ -1,6 +1,6 @@
 # Ingredient Magnitudes
 
-Mod is available at [Soon]
+Mod is available at https://www.nexusmods.com/skyrimspecialedition/mods/167127
 
 Based on CommonLibSSE NG:
 
