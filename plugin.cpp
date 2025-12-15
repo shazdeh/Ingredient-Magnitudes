@@ -1,4 +1,8 @@
-﻿static std::unordered_map<FormID, std::array<float, 4>> effectsMap;
+﻿#include <SimpleIni.h>
+
+static std::unordered_map<FormID, std::array<float, 4>> effectsMap;
+BGSPerk* requiredPerk;
+int requiredSkill;
 
 void BuildMap() {
     auto ingredients = TESDataHandler::GetSingleton()->GetFormArray<IngredientItem>();
@@ -64,18 +68,50 @@ void Inject(BSFixedString menuName) {
     }
 }
 
+bool ShouldShow() {
+    if (requiredSkill > 0) {
+        ActorValueOwner* av = PlayerCharacter::GetSingleton()->AsActorValueOwner();
+        if (av->GetBaseActorValue(ActorValue::kAlchemy) < requiredSkill) return false;
+    }
+    if (requiredPerk) {
+        if (!PlayerCharacter::GetSingleton()->HasPerk(requiredPerk)) return false;
+    }
+
+    return true;
+}
+
+void LoadConfig() {
+    try {
+        CSimpleIniA ini;
+        ini.SetUnicode();
+        if (ini.LoadFile("Data/SKSE/Plugins/IngredientMagnitudes.ini") == SI_OK) {
+            requiredSkill = std::stoi(ini.GetValue("Main", "iRequiredSkill", "0"));
+            std::string thePerk = ini.GetValue("Main", "sRequiredPerk", "");
+            if (thePerk != "") {
+                requiredPerk = TESForm::LookupByEditorID<BGSPerk>(thePerk);
+            }
+        }
+    } catch (const std::exception& e) {
+    }
+}
+
 class MyEventSink : public RE::BSTEventSink<MenuOpenCloseEvent> {
 public:
     RE::BSEventNotifyControl ProcessEvent(const RE::MenuOpenCloseEvent* event,
                                           RE::BSTEventSource<RE::MenuOpenCloseEvent>*) {
         if (event->menuName == CraftingMenu::MENU_NAME && event->opening) {
-            Inject(event->menuName);
+            if (ShouldShow()) {
+                Inject(event->menuName);
+            }
         }
         return RE::BSEventNotifyControl::kContinue;
     }
 };
 
-void OnDataLoad() { UI::GetSingleton()->AddEventSink(new MyEventSink()); }
+void OnDataLoad() {
+    LoadConfig();
+    UI::GetSingleton()->AddEventSink(new MyEventSink());
+}
 
 SKSEPluginLoad(const SKSE::LoadInterface *skse) {
     SKSE::Init(skse);

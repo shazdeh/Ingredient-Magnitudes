@@ -1,4 +1,5 @@
 import skse;
+import Shared.GlobalFunc;
 
 class IngMags extends MovieClip {
 
@@ -46,7 +47,7 @@ class IngMags extends MovieClip {
                     // if it's negative the value is for Duration instead,
                     // but no plan to use it atm
                     if (magnitudes[i] > 0) {
-                        ItemInfo["EffectLabel" + i].SetText(ItemInfo.LastUpdateObj["itemEffect" + i] + '  [' + magnitudes[i] + ']');
+                        ItemInfo["EffectLabel" + i].SetText(ItemInfo.LastUpdateObj["itemEffect" + i] + '  [' + GlobalFunc.RoundDecimal(magnitudes[i], 2) + ']');
                     }
                 }
             }
